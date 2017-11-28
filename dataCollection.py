@@ -15,12 +15,15 @@ soup = BeautifulSoup(page.content,'html.parser')
 
 genre_link = []
 for i in soup.find_all(class_='td-item td-text-big'):
-    genre_link.append(tuple([i.get_text().encode('utf-8'),i.find('a').get('href').encode('utf-8')]))
+    if i.find('a').get('href').encode('utf-8').startswith('http://'):
+        continue
+    else:
+        genre_link.append(tuple([i.get_text().encode('utf-8'),i.find('a').get('href').encode('utf-8')]))
 
+genres = ['Folk','Rock','R&B;','Hip Hop/Rap','Pop','Jazz', 'Country', 'Acoustic', 'Alternative', 'Christian', 'Dance',  'Latin', 'Blues', 'Electronic',
+ 'Funk', 'Jazz', 'Pop', 'Soul', 'Soundtrack', 'Adult Contemporary','Classical', 'Reggae',  'World','New Age',  'African', 'Ska', 'Avant-Garde', "Children's Music",
+ 'Holiday',  'Comedy', 'Musical', 'Vocal', 'Instrumental', 'Oldies']
 
-genres = ['Folk','Rock','R&B;','Hip Hop/Rap','Pop','Jazz']
-
-#print genre_link
 
 new_genre_link = []
 for i in genre_link:
@@ -28,8 +31,6 @@ for i in genre_link:
         new_genre_link.append(i)
 
 new_genre_link = new_genre_link[:-3]
-
-#print new_genre_link
 
 pop_page = requests.get("http://www.songlyrics.com/pop-lyrics.php")
 
@@ -40,8 +41,6 @@ new_genre_link[3] = list(new_genre_link[3])
 new_genre_link[3][0] = 'Hip-Hop'
 new_genre_link[3] = tuple(new_genre_link[3])
 
-#print new_genre_link
-
 soup = BeautifulSoup(pop_page.content,'html.parser')
 
 album_link = []
@@ -49,15 +48,8 @@ flag = 0
 for table in soup.find_all(class_='tracklist'):
     if(flag==1):
         for i in table.find_all(class_="td-item td-last"):
-            #print (i)
-            #print ('\n')
             album_link.append(tuple(['pop',i.find_all('span')[-1].get_text().encode('utf-8'),i.find('a').get('title').encode('utf-8'),i.find('a').get('href').encode('utf-8')]))
     flag += 1
-
-
-#print album_link
-
-#print album_link[0][2].split('Album')[0].replace(' ','')
 
 req = requests.get(album_link[0][3])
 
@@ -69,17 +61,11 @@ table = pop.find(class_='tracklist')
 for i in table.find_all('tr'):
     song_link.append(tuple([i.find('a').get('title').encode('utf-8'),i.find('a').get('href').encode('utf-8')]))
 
-#print song_link[1][0].split('Lyrics')[0]
-
-#print song_link
-
 firstlyrics = requests.get(song_link[0][1])
 
 lyrics = BeautifulSoup(firstlyrics.content, 'html.parser')
 
 lyric = lyrics.find(id='songLyricsDiv').get_text()
-
-#print album_link
 
 pop_matrix = []
 for i in album_link:
@@ -106,12 +92,10 @@ for i in album_link:
 
 
 pop_d = pd.DataFrame(pop_matrix,columns=['Genre','Artist','Album','Song','Lyrics'])
-#print pop_d
-
-#print pop_d.drop_duplicates('Song')
 
 def song_scrapper():
     song_matrix = []
+    print new_genre_link
     for i in new_genre_link:
         #print ()
         genre_page = requests.get('http://www.songlyrics.com/'+i[1])
@@ -119,24 +103,36 @@ def song_scrapper():
         album_link = []
         flag = 0
         for table in soup.find_all(class_='tracklist'):
+            #print table
             if(flag==1):
                 for j in table.find_all(class_="td-item td-last"):
+                    
                     album_link.append(tuple([i[0],j.find_all('span')[-1].get_text().encode('utf-8'),j.find('a').get('title').encode('utf-8'),j.find('a').get('href').encode('utf-8')]))
+                    #print album_link
             flag += 1
+        
         for k in album_link:
             req = requests.get(k[:][3])
             pop = BeautifulSoup(req.content,'html.parser')
             table = pop.find(class_='tracklist')
             song_link = []
             for l in table.find_all('tr'):
-                song_link.append(tuple([l.find('a').get('title'),l.find('a').get('href')]))
+                #print l.find('a')
+                if l.find('a') is None:
+                    continue
+                else:
+                    song_link.append(tuple([l.find('a').get('title').encode('utf-8'),l.find('a').get('href').encode('utf-8')]))
+
             for m in song_link:
                 if(m[:][1][0]=='/'):
                     lyrics = requests.get('http://www.songlyrics.com/'+m[:][1])
                 else:
                     lyrics = requests.get(m[:][1])
                 lyr = BeautifulSoup(lyrics.content,'html.parser')
-                lyric = lyr.find(id='songLyricsDiv').get_text()
+                if lyr.find(id='songLyricsDiv') is None:
+                    continue
+                else:
+                    lyric = lyr.find(id='songLyricsDiv').get_text()
                 if(len(lyric)>300):
                     row = []
                     row.append(k[0])
@@ -148,7 +144,7 @@ def song_scrapper():
     return song_matrix
 
 matrix = song_scrapper()
-print len(matrix)
+#print len(matrix)
 
 data = pd.DataFrame(matrix,columns=['genre','artist','album','song','lyrics'])
 
@@ -159,6 +155,6 @@ d = d.drop_duplicates('song')
 #print d.groupby('genre').count()
 
 #data = pd.read_csv('Song_Lyrics.csv')
-print len(d)
-d.to_csv("/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/songs.csv", encoding='utf-8', index=False)
+
+d.to_csv("/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/song.csv", encoding='utf-8', index=False)
 #print data
