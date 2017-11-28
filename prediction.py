@@ -22,7 +22,8 @@ pos_features_new = (a - a.mean())/(a.max()-a.min())
 #print pos_features_new
 w2v_features = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/w2vDataFinal.csv')
 
-data = pd.concat([w2v_features,pos_features_new],axis=1)
+#data = pd.concat([w2v_features,pos_features_new],axis=1)
+data = pd.concat([pos_features_new],axis=1)
 
 data['genre'] = pos_features.genre
 #print data['genre']
@@ -60,8 +61,18 @@ print np.isnan(test_y).any()
 #print train_y
 
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import linear_model
+from sklearn import svm
 
-gd = GradientBoostingClassifier(max_depth=20)
+gd = linear_model.LogisticRegression(C=1e5)
+#gd = svm.SVC()
+#gd = GaussianNB()
+#gd = KNeighborsClassifier(n_neighbors=3)
+#gd = RandomForestClassifier(max_depth=20)
+#gd = GradientBoostingClassifier(max_depth=20)
 gd.fit(train,train_y)
 pred = gd.predict(test)
 print (accuracy_score(test_y,pred))

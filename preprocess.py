@@ -24,11 +24,7 @@ def StopStem(df):
 
 songs = StopStem(data)
 
-# for index,row in songs.lyrics.iteritems():
-#      if(ftfy.badness.sequence_weirdness(row)<0):
-#          songs.lyrics[index] = np.NaN
-
-# songs.dropna(inplace=True)
+ 
 
 def remove_brackets(text):
     new_text = re.sub(r'\(.*?\)','',text)
