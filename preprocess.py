@@ -24,7 +24,6 @@ def StopStem(df):
 
 songs = StopStem(data)
 
- 
 
 def remove_brackets(text):
     new_text = re.sub(r'\(.*?\)','',text)

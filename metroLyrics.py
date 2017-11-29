@@ -70,8 +70,6 @@ for i in range(0,5):
 		row.append(data[i][2])
 		song_data.append(row)
 
-#print song_data[0]
-
 lyrics_data = []
 for i in song_data:
 	row = []

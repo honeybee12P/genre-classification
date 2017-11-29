@@ -1,80 +1,162 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-
-pos_features = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/PosTagsRock1.csv')
-songs = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/clean.csv')
-#print pos_features.columns.difference(['genre'])
-a = pos_features[pos_features.columns.difference(['genre'])]
-#a.replace('?', np.NaN)
-#a = a.fillna(0)
-
-
-a  = a.fillna(a.median(axis=0))
-
-#print a
-
-
-
-pos_features_new = (a - a.mean())/(a.max()-a.min())
-#print songs.head()
-#print pos_features_new
-w2v_features = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/w2vDataFinal.csv')
-
-#data = pd.concat([w2v_features,pos_features_new],axis=1)
-data = pd.concat([pos_features_new],axis=1)
-
-data['genre'] = pos_features.genre
-#print data['genre']
-data = data.reindex(np.random.permutation(data.index))
-
-#print data
-
-train,test,train_y,test_y = train_test_split(np.nan_to_num(data[data.columns.difference(['genre'])]),data['genre'],train_size=0.67)
-
-# train = train.fillna(train.mean())
-# test = test.fillna(test.mean())
-
-# train = train.values.reshape(train.size,1)
-# train = train.astype(np.float64, copy=False)
-
-# test = test.values.reshape(test.size,1)
-# test = test.astype(np.float64, copy=False)
-
-# train_y = train_y.values.reshape(train_y.size,1)
-# train_y = train_y.astype(np.float64, copy=False)
-
-# test_y = test_y.values.reshape(test_y.size,1)
-# test_y = test_y.astype(np.float64, copy=False)
-
-#print train
-
-print np.isnan(train).any()
-print np.isnan(test).any() 
-print np.isnan(train_y).any()
-print np.isnan(test_y).any()
-#from collections import Counter
-#c = Counter()
-#c.update(train_y)
-
-#print train_y
-
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import linear_model
 from sklearn import svm
+import warnings
+import sklearn.exceptions
+warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 
-gd = linear_model.LogisticRegression(C=1e5)
-#gd = svm.SVC()
-#gd = GaussianNB()
-#gd = KNeighborsClassifier(n_neighbors=3)
-#gd = RandomForestClassifier(max_depth=20)
-#gd = GradientBoostingClassifier(max_depth=20)
-gd.fit(train,train_y)
-pred = gd.predict(test)
-print (accuracy_score(test_y,pred))
+pos_features = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/PosTagsRock.csv')
+songs = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/clean.csv')
+a = pos_features[pos_features.columns.difference(['genre'])]
+a  = a.fillna(a.median(axis=0))
+ 
+pos_features_new = (a - a.mean())/(a.max()-a.min())
+w2v_features = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/w2vDataFinal.csv')
 
-data.to_csv("/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/combined.csv",index=False)
+# ####################################################POS-FEATURES#############################################
+dataPOS = pd.concat([pos_features_new],axis=1)
+
+dataPOS['genre'] = pos_features.genre
+
+dataPOS = dataPOS.reindex(np.random.permutation(dataPOS.index))
+
+train,test,train_y,test_y = train_test_split(np.nan_to_num(dataPOS[dataPOS.columns.difference(['genre'])]),dataPOS['genre'],train_size=0.70) 
+
+gdLM = linear_model.LogisticRegression(C=1e5)
+gdLM.fit(train,train_y)
+pred = gdLM.predict(test)
+print("#####################################################POS FEATURES FEATURES ONLY############################################")
+print("Logistic Regression Accuracy", accuracy_score(test_y,pred))
+print("Logistic Regression F1 Score",f1_score(test_y,pred, average="macro"))
+print("Logistic RegressionPrecision Score", precision_score(test_y, pred, average="macro"))
+print("Logistic Regression Recall Score", recall_score(test_y, pred, average="macro"))
+
+gdSVM = svm.SVC()
+gdSVM.fit(train,train_y)
+pred = gdSVM.predict(test)
+print("SVM Accuracy", accuracy_score(test_y,pred))
+print("SVM F1 Score",f1_score(test_y,pred, average="macro"))
+print("SVM Precision Score", precision_score(test_y, pred, average="macro"))
+print("SVM Recall Score", recall_score(test_y, pred, average="macro")) 
+
+gdGB = GradientBoostingClassifier(max_depth=20)
+gdGB.fit(train,train_y)
+pred = gdGB.predict(test)
+print("Gradient Boosting Classifier Accuracy", accuracy_score(test_y,pred))
+print("Gradient Boosting Classifier F1 Score",f1_score(test_y,pred, average="macro"))
+print("Gradient Boosting Classifier Precision Score", precision_score(test_y, pred, average="macro"))
+print("Gradient Boosting Classifier Recall Score", recall_score(test_y, pred, average="macro")) 
+
+gdRF = RandomForestClassifier(max_depth=20)
+gdRF.fit(train,train_y)
+pred = gdRF.predict(test)
+print("Random Forest Classifier Accuracy", accuracy_score(test_y,pred))
+print("Random Forest Classifier F1 Score",f1_score(test_y,pred, average="macro"))
+print("Random Forest Classifier Precision Score", precision_score(test_y, pred, average="macro"))
+print("Random Forest Classifier Recall Score", recall_score(test_y, pred, average="macro")) 
+
+
+dataPOS.to_csv("/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/posOnly.csv",index=False)
+# ###########################################################################################################
+
+####################################################Word2vec only#############################################
+dataVEC = pd.concat([w2v_features],axis=1)
+
+dataVEC['genre'] = pos_features.genre
+
+dataVEC = dataVEC.reindex(np.random.permutation(dataVEC.index))
+
+train,test,train_y,test_y = train_test_split(np.nan_to_num(dataVEC[dataVEC.columns.difference(['genre'])]),dataVEC['genre'],train_size=0.70) 
+
+print("#####################################################WORD2VEC FEATURES ONLY#####################################################")
+gdLM = linear_model.LogisticRegression(C=1e5)
+gdLM.fit(train,train_y)
+pred = gdLM.predict(test)
+print("Logistic Regression Accuracy", accuracy_score(test_y,pred))
+print("Logistic Regression F1 Score",f1_score(test_y,pred, average="macro"))
+print("Logistic RegressionPrecision Score", precision_score(test_y, pred, average="macro"))
+print("Logistic Regression Recall Score", recall_score(test_y, pred, average="macro"))
+
+gdSVM = svm.SVC()
+gdSVM.fit(train,train_y)
+pred = gdSVM.predict(test)
+print("SVM Accuracy", accuracy_score(test_y,pred))
+print("SVM F1 Score",f1_score(test_y,pred, average="macro"))
+print("SVM Precision Score", precision_score(test_y, pred, average="macro"))
+print("SVM Recall Score", recall_score(test_y, pred, average="macro")) 
+
+gdGB = GradientBoostingClassifier(max_depth=20)
+gdGB.fit(train,train_y)
+pred = gdGB.predict(test)
+print("Gradient Boosting Classifier Accuracy", accuracy_score(test_y,pred))
+print("Gradient Boosting Classifier F1 Score",f1_score(test_y,pred, average="macro"))
+print("Gradient Boosting Classifier Precision Score", precision_score(test_y, pred, average="macro"))
+print("Gradient Boosting Classifier Recall Score", recall_score(test_y, pred, average="macro")) 
+
+gdRF = RandomForestClassifier(max_depth=20)
+gdRF.fit(train,train_y)
+pred = gdRF.predict(test)
+print("Random Forest Classifier Accuracy", accuracy_score(test_y,pred))
+print("Random Forest Classifier F1 Score",f1_score(test_y,pred, average="macro"))
+print("Random Forest Classifier Precision Score", precision_score(test_y, pred, average="macro"))
+print("Random Forest Classifier Recall Score", recall_score(test_y, pred, average="macro")) 
+
+
+dataVEC.to_csv("/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/vecOnly.csv",index=False)
+###########################################################################################################
+
+
+####################################################pos+Word2vec only#############################################
+dataPV = pd.concat([pos_features,w2v_features],axis=1)
+
+dataPV['genre'] = pos_features.genre
+
+dataPV = dataPV.reindex(np.random.permutation(dataPV.index))
+
+train,test,train_y,test_y = train_test_split(np.nan_to_num(dataPV[dataPV.columns.difference(['genre'])]),dataPV['genre'],train_size=0.70) 
+
+gdLM = linear_model.LogisticRegression(C=1e5)
+gdLM.fit(train,train_y)
+pred = gdLM.predict(test)
+print("#####################################################POS FEATURES + WORD2VEC FEATURES#####################################################")
+print("Logistic Regression Accuracy", accuracy_score(test_y,pred))
+print("Logistic Regression F1 Score",f1_score(test_y,pred, average="macro"))
+print("Logistic RegressionPrecision Score", precision_score(test_y, pred, average="macro"))
+print("Logistic Regression Recall Score", recall_score(test_y, pred, average="macro"))
+
+gdSVM = svm.SVC()
+gdSVM.fit(train,train_y)
+pred = gdSVM.predict(test)
+print("SVM Accuracy", accuracy_score(test_y,pred))
+print("SVM F1 Score",f1_score(test_y,pred, average="macro"))
+print("SVM Precision Score", precision_score(test_y, pred, average="macro"))
+print("SVM Recall Score", recall_score(test_y, pred, average="macro")) 
+
+gdGB = GradientBoostingClassifier(max_depth=20)
+gdGB.fit(train,train_y)
+pred = gdGB.predict(test)
+print("Gradient Boosting Classifier Accuracy", accuracy_score(test_y,pred))
+print("Gradient Boosting Classifier F1 Score",f1_score(test_y,pred, average="macro"))
+print("Gradient Boosting Classifier Precision Score", precision_score(test_y, pred, average="macro"))
+print("Gradient Boosting Classifier Recall Score", recall_score(test_y, pred, average="macro")) 
+
+gdRF = RandomForestClassifier(max_depth=20)
+gdRF.fit(train,train_y)
+pred = gdRF.predict(test)
+print("Random Forest Classifier Accuracy", accuracy_score(test_y,pred))
+print("Random Forest Classifier F1 Score",f1_score(test_y,pred, average="macro"))
+print("Random Forest Classifier Precision Score", precision_score(test_y, pred, average="macro"))
+print("Random Forest Classifier Recall Score", recall_score(test_y, pred, average="macro")) 
+
+
+dataPV.to_csv("/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/vecOnly.csv",index=False)
+###########################################################################################################
+
+
