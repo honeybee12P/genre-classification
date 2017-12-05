@@ -16,8 +16,8 @@ pos_features = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/ge
 songs = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/clean.csv')
 a = pos_features[pos_features.columns.difference(['genre'])]
 a  = a.fillna(a.median(axis=0))
- 
-pos_features_new = (a - a.mean())/(a.max()-a.min())
+print a.max()
+pos_features_new = (a - a.min())/(a.max()-a.min())
 w2v_features = pd.read_csv('/Users/kruthikavishwanath/Documents/Fall 2017/NLP/genre-classification/w2vDataFinal.csv')
 
 # ####################################################POS-FEATURES#############################################
@@ -26,7 +26,7 @@ dataPOS = pd.concat([pos_features_new],axis=1)
 dataPOS['genre'] = pos_features.genre
 
 dataPOS = dataPOS.reindex(np.random.permutation(dataPOS.index))
-
+#print dataPOS
 train,test,train_y,test_y = train_test_split(np.nan_to_num(dataPOS[dataPOS.columns.difference(['genre'])]),dataPOS['genre'],train_size=0.70) 
 
 gdLM = linear_model.LogisticRegression(C=1e5)
